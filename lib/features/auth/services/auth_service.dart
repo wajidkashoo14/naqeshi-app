@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:google_sign_in/google_sign_in.dart';
@@ -18,35 +19,59 @@ class AuthService {
   AuthService(this._client);
 
   Future<UserModel> login(String email, String password) async {
-    final res = await _client.dio.post('/mobile/auth/login', data: {
-      'email': email,
-      'password': password,
-    });
-    await _saveSession(res.data);
-    return UserModel.fromJson(res.data['user'] as Map<String, dynamic>);
+    try {
+      final res = await _client.dio.post('/mobile/auth/login', data: {
+        'email': email,
+        'password': password,
+      });
+      await _saveSession(res.data);
+      return UserModel.fromJson(res.data['user'] as Map<String, dynamic>);
+    } on DioException catch (e) {
+      throw Exception(_messageFrom(e, {
+        401: 'Incorrect email or password.',
+        404: 'No account found with that email.',
+      }));
+    }
   }
 
   Future<UserModel> register(String name, String email, String password) async {
-    final res = await _client.dio.post('/mobile/auth/register', data: {
-      'name': name,
-      'email': email,
-      'password': password,
-    });
-    await _saveSession(res.data);
-    return UserModel.fromJson(res.data['user'] as Map<String, dynamic>);
+    try {
+      final res = await _client.dio.post('/mobile/auth/register', data: {
+        'name': name,
+        'email': email,
+        'password': password,
+      });
+      await _saveSession(res.data);
+      return UserModel.fromJson(res.data['user'] as Map<String, dynamic>);
+    } on DioException catch (e) {
+      throw Exception(_messageFrom(e, {
+        409: 'An account with this email already exists.',
+      }));
+    }
   }
 
   Future<UserModel?> signInWithGoogle() async {
-    final account = await _googleSignIn.signIn();
-    if (account == null) return null;
+    try {
+      final account = await _googleSignIn.signIn();
+      if (account == null) return null;
 
-    final auth = await account.authentication;
-    final idToken = auth.idToken;
-    if (idToken == null) throw Exception('Failed to get Google ID token');
+      final auth = await account.authentication;
+      final idToken = auth.idToken;
+      if (idToken == null) throw Exception('Failed to get Google ID token');
 
-    final res = await _client.dio.post('/mobile/auth/google', data: {'idToken': idToken});
-    await _saveSession(res.data);
-    return UserModel.fromJson(res.data['user'] as Map<String, dynamic>);
+      final res = await _client.dio.post('/mobile/auth/google', data: {'idToken': idToken});
+      await _saveSession(res.data);
+      return UserModel.fromJson(res.data['user'] as Map<String, dynamic>);
+    } on DioException catch (e) {
+      throw Exception(_messageFrom(e, {}));
+    }
+  }
+
+  String _messageFrom(DioException e, Map<int, String> overrides) {
+    final code = e.response?.statusCode;
+    if (code != null && overrides.containsKey(code)) return overrides[code]!;
+    final serverMsg = e.response?.data is Map ? e.response!.data['error'] as String? : null;
+    return serverMsg ?? 'Something went wrong. Please try again.';
   }
 
   Future<void> logout() async {

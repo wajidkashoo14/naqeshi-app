@@ -36,4 +36,8 @@ class AuthNotifier extends AsyncNotifier<UserModel?> {
   void updateUser(UserModel user) {
     state = AsyncData(user);
   }
+
+  void clearError() {
+    state = const AsyncData(null);
+  }
 }

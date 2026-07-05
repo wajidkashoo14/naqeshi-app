@@ -34,10 +34,14 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
           _emailCtrl.text.trim(),
           _passCtrl.text,
         );
-    if (ref.read(authStateProvider).hasError && mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(ref.read(authStateProvider).error.toString())),
-      );
+    if (!mounted) return;
+    final authState = ref.read(authStateProvider);
+    if (authState.hasError) {
+      final msg = authState.error is Exception
+          ? authState.error.toString().replaceFirst('Exception: ', '')
+          : 'Something went wrong. Please try again.';
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+      ref.read(authStateProvider.notifier).clearError();
     }
   }
 

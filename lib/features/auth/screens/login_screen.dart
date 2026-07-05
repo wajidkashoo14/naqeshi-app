@@ -28,19 +28,25 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   Future<void> _submit() async {
     if (!_form.currentState!.validate()) return;
     await ref.read(authStateProvider.notifier).login(_emailCtrl.text.trim(), _passCtrl.text);
-    if (ref.read(authStateProvider).hasError && mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(ref.read(authStateProvider).error.toString())),
-      );
+    if (!mounted) return;
+    final authState = ref.read(authStateProvider);
+    if (authState.hasError) {
+      final msg = authState.error is Exception
+          ? authState.error.toString().replaceFirst('Exception: ', '')
+          : 'Something went wrong. Please try again.';
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+      ref.read(authStateProvider.notifier).clearError();
     }
   }
 
   Future<void> _googleSignIn() async {
     await ref.read(authStateProvider.notifier).signInWithGoogle();
-    if (ref.read(authStateProvider).hasError && mounted) {
+    if (!mounted) return;
+    if (ref.read(authStateProvider).hasError) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Google sign-in failed. Please try again.')),
       );
+      ref.read(authStateProvider.notifier).clearError();
     }
   }
 
