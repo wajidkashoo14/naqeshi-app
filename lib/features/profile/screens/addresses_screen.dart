@@ -5,6 +5,8 @@ import '../../checkout/models/address_model.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../shared/widgets/loading_button.dart';
 
+// ignore_for_file: use_build_context_synchronously
+
 class AddressesScreen extends ConsumerWidget {
   const AddressesScreen({super.key});
 
@@ -63,11 +65,8 @@ class AddressesScreen extends ConsumerWidget {
       context: context,
       isScrollControlled: true,
       backgroundColor: AppColors.ivory,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
-      builder: (_) => Padding(
-        padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
-        child: _AddressForm(address: address, ref: ref),
-      ),
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
+      builder: (_) => _AddressForm(address: address),
     );
   }
 }
@@ -83,7 +82,7 @@ class _AddressTile extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(color: AppColors.beige, borderRadius: BorderRadius.circular(12)),
+      decoration: const BoxDecoration(color: AppColors.beige),
       child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
         const Icon(Icons.location_on_outlined, color: AppColors.gold, size: 20),
         const SizedBox(width: 10),
@@ -95,7 +94,7 @@ class _AddressTile extends StatelessWidget {
                 const SizedBox(width: 6),
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                  decoration: BoxDecoration(color: AppColors.gold.withOpacity(0.2), borderRadius: BorderRadius.circular(10)),
+                  decoration: BoxDecoration(color: AppColors.gold.withOpacity(0.2)),
                   child: Text('Default', style: Theme.of(context).textTheme.bodySmall?.copyWith(color: AppColors.gold)),
                 ),
               ],
@@ -118,16 +117,15 @@ class _AddressTile extends StatelessWidget {
   }
 }
 
-class _AddressForm extends StatefulWidget {
+class _AddressForm extends ConsumerStatefulWidget {
   final AddressModel? address;
-  final WidgetRef ref;
-  const _AddressForm({this.address, required this.ref});
+  const _AddressForm({this.address});
 
   @override
-  State<_AddressForm> createState() => _AddressFormState();
+  ConsumerState<_AddressForm> createState() => _AddressFormState();
 }
 
-class _AddressFormState extends State<_AddressForm> {
+class _AddressFormState extends ConsumerState<_AddressForm> {
   final _form = GlobalKey<FormState>();
   late final _nameCtrl = TextEditingController(text: widget.address?.fullName ?? '');
   late final _phoneCtrl = TextEditingController(text: widget.address?.phone ?? '');
@@ -164,9 +162,9 @@ class _AddressFormState extends State<_AddressForm> {
         'isDefault': _isDefault,
       };
       if (widget.address != null) {
-        await widget.ref.read(addressesProvider.notifier).update(widget.address!.id, data);
+        await ref.read(addressesProvider.notifier).update(widget.address!.id, data);
       } else {
-        await widget.ref.read(addressesProvider.notifier).add(data);
+        await ref.read(addressesProvider.notifier).add(data);
       }
       if (mounted) Navigator.pop(context);
     } catch (e) {

@@ -18,9 +18,11 @@ class CheckoutScreen extends ConsumerStatefulWidget {
 
 class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
   String? _selectedAddressId;
+  bool _defaultAddressSet = false;
   String _paymentMethod = 'RAZORPAY';
   final _couponCtrl = TextEditingController();
   bool _isLoading = false;
+  bool _razorpayOpen = false;
   late Razorpay _razorpay;
 
   @override
@@ -39,6 +41,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
   }
 
   void _onPaymentSuccess(PaymentSuccessResponse response) async {
+    setState(() => _razorpayOpen = false);
     final orderId = response.orderId;
     final paymentId = response.paymentId;
     final signature = response.signature;
@@ -67,8 +70,9 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
   }
 
   void _onPaymentError(PaymentFailureResponse response) {
+    setState(() => _razorpayOpen = false);
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Payment failed: ${response.message}')),
+      SnackBar(content: Text('Payment failed: ${response.message ?? "Please try again."}')),
     );
   }
 
@@ -91,6 +95,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
         ref.read(cartProvider.notifier).clear();
         if (mounted) context.go('/order-confirmation/${res.data['orderId']}');
       } else {
+        setState(() => _razorpayOpen = true);
         // Open Razorpay SDK
         _razorpay.open({
           'key': res.data['keyId'],
@@ -135,10 +140,13 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
                   label: const Text('Add Address'),
                 );
               }
-              // Auto-select default
-              if (_selectedAddressId == null) {
-                final def = addresses.firstWhere((a) => a.isDefault, orElse: () => addresses.first);
-                _selectedAddressId = def.id;
+              // Auto-select default address once only
+              if (!_defaultAddressSet && _selectedAddressId == null) {
+                _defaultAddressSet = true;
+                WidgetsBinding.instance.addPostFrameCallback((_) {
+                  final def = addresses.firstWhere((a) => a.isDefault, orElse: () => addresses.first);
+                  setState(() => _selectedAddressId = def.id);
+                });
               }
               return Column(
                 children: [
@@ -182,7 +190,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
           const SizedBox(height: 24),
           Container(
             padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(color: AppColors.beige, borderRadius: BorderRadius.circular(12)),
+            decoration: BoxDecoration(color: AppColors.beige, borderRadius: BorderRadius.zero),
             child: Column(children: [
               _SummaryRow('Subtotal', '₹${cartTotal.toStringAsFixed(0)}'),
               const SizedBox(height: 6),
@@ -192,7 +200,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
             ]),
           ),
           const SizedBox(height: 24),
-          LoadingButton(label: 'Place Order', isLoading: _isLoading, onPressed: _placeOrder),
+          LoadingButton(label: 'Place Order', isLoading: _isLoading || _razorpayOpen, onPressed: _placeOrder),
           const SizedBox(height: 40),
         ]),
       ),
@@ -216,7 +224,7 @@ class _AddressTile extends StatelessWidget {
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
           color: selected ? AppColors.gold.withOpacity(0.1) : AppColors.beige,
-          borderRadius: BorderRadius.circular(10),
+          borderRadius: BorderRadius.zero,
           border: Border.all(color: selected ? AppColors.gold : Colors.transparent),
         ),
         child: Row(children: [

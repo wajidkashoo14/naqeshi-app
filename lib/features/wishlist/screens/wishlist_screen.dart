@@ -44,7 +44,7 @@ class WishlistScreen extends ConsumerWidget {
               return GestureDetector(
                 onTap: () => context.push('/products/${p.slug}'),
                 child: Container(
-                  decoration: BoxDecoration(color: AppColors.beige, borderRadius: BorderRadius.circular(12)),
+                  decoration: BoxDecoration(color: AppColors.beige, borderRadius: BorderRadius.zero),
                   child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                     Expanded(
                       child: Stack(children: [

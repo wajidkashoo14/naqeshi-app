@@ -35,6 +35,9 @@ class ProductsFilter {
         maxPrice: maxPrice ?? this.maxPrice,
         page: page ?? this.page,
       );
+
+  // Two filters with same params but different page are same "query"
+  ProductsFilter resetPage() => copyWith(page: 1);
 }
 
 class ProductsResult {
@@ -47,30 +50,59 @@ class ProductsResult {
 
 final productsFilterProvider = StateProvider<ProductsFilter>((ref) => const ProductsFilter());
 
-final productsProvider = FutureProvider.autoDispose<ProductsResult>((ref) async {
-  final filter = ref.watch(productsFilterProvider);
-  final client = ref.read(dioClientProvider);
+final productsProvider = AsyncNotifierProvider.autoDispose<ProductsNotifier, ProductsResult>(
+  ProductsNotifier.new,
+);
 
-  final params = <String, dynamic>{
-    'page': filter.page,
-    'limit': 20,
-    'sortBy': filter.sortBy,
-    if (filter.category != null) 'category': filter.category,
-    if (filter.search != null) 'search': filter.search,
-    if (filter.minPrice != null) 'minPrice': filter.minPrice,
-    if (filter.maxPrice != null) 'maxPrice': filter.maxPrice,
-  };
+class ProductsNotifier extends AutoDisposeAsyncNotifier<ProductsResult> {
+  final List<ProductSummary> _accumulated = [];
+  ProductsFilter? _lastQueryFilter; // filter without page — detects a new query
 
-  final res = await client.dio.get('/products', queryParameters: params);
-  final data = res.data as Map<String, dynamic>;
-  return ProductsResult(
-    products: (data['products'] as List)
+  @override
+  Future<ProductsResult> build() async {
+    final filter = ref.watch(productsFilterProvider);
+    final client = ref.read(dioClientProvider);
+
+    final queryFilter = filter.resetPage();
+    // If the search/category/sort changed, clear accumulated list
+    if (_lastQueryFilter != null && _lastQueryFilter!.search != queryFilter.search ||
+        _lastQueryFilter != null && _lastQueryFilter!.category != queryFilter.category ||
+        _lastQueryFilter != null && _lastQueryFilter!.sortBy != queryFilter.sortBy) {
+      _accumulated.clear();
+    }
+    _lastQueryFilter = queryFilter;
+
+    final params = <String, dynamic>{
+      'page': filter.page,
+      'limit': 20,
+      'sortBy': filter.sortBy,
+      if (filter.category != null) 'category': filter.category,
+      if (filter.search != null) 'search': filter.search,
+      if (filter.minPrice != null) 'minPrice': filter.minPrice,
+      if (filter.maxPrice != null) 'maxPrice': filter.maxPrice,
+    };
+
+    final res = await client.dio.get('/products', queryParameters: params);
+    final data = res.data as Map<String, dynamic>;
+    final newProducts = (data['products'] as List)
         .map((e) => ProductSummary.fromJson(e as Map<String, dynamic>))
-        .toList(),
-    total: data['total'] as int? ?? 0,
-    totalPages: data['totalPages'] as int? ?? 1,
-  );
-});
+        .toList();
+    final total = data['total'] as int? ?? 0;
+    final totalPages = data['totalPages'] as int? ?? 1;
+
+    if (filter.page == 1) {
+      _accumulated
+        ..clear()
+        ..addAll(newProducts);
+    } else {
+      // Append only new items (dedup by id)
+      final existingIds = _accumulated.map((p) => p.id).toSet();
+      _accumulated.addAll(newProducts.where((p) => !existingIds.contains(p.id)));
+    }
+
+    return ProductsResult(products: List.unmodifiable(_accumulated), total: total, totalPages: totalPages);
+  }
+}
 
 final productDetailProvider = FutureProvider.autoDispose.family<ProductDetail, String>((ref, slug) async {
   final client = ref.read(dioClientProvider);

@@ -44,7 +44,7 @@ class OrderDetailScreen extends ConsumerWidget {
           const SizedBox(height: 16),
           Container(
             padding: const EdgeInsets.all(14),
-            decoration: BoxDecoration(color: AppColors.beige, borderRadius: BorderRadius.circular(10)),
+            decoration: BoxDecoration(color: AppColors.beige, borderRadius: BorderRadius.zero),
             child: Row(children: [
               const Icon(Icons.local_shipping_outlined, color: AppColors.gold),
               const SizedBox(width: 10),
@@ -75,18 +75,19 @@ class OrderDetailScreen extends ConsumerWidget {
         const SizedBox(height: 12),
         ...order.timeline.map((t) => _TimelineRow(timeline: t)),
 
-        // Write review button for delivered orders
-        if (order.status == 'DELIVERED') ...[
+        // Write review buttons for each item in delivered orders
+        if (order.status == 'DELIVERED' && order.items.isNotEmpty) ...[
           const SizedBox(height: 24),
-          OutlinedButton.icon(
-            onPressed: () {
-              if (order.items.isNotEmpty) {
-                context.push('/reviews/write/${order.items.first.productId}');
-              }
-            },
-            icon: const Icon(Icons.star_outline),
-            label: const Text('Write a Review'),
-          ),
+          Text('Leave a Review', style: Theme.of(context).textTheme.titleLarge),
+          const SizedBox(height: 10),
+          ...order.items.where((item) => item.productId.isNotEmpty).map((item) => Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: OutlinedButton.icon(
+                  onPressed: () => context.push('/reviews/write/${item.productId}'),
+                  icon: const Icon(Icons.star_outline),
+                  label: Text('Review: ${item.name}', maxLines: 1, overflow: TextOverflow.ellipsis),
+                ),
+              )),
         ],
         const SizedBox(height: 40),
       ]),
@@ -112,7 +113,7 @@ class _StatusChip extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-      decoration: BoxDecoration(color: color.withOpacity(0.15), borderRadius: BorderRadius.circular(20)),
+      decoration: BoxDecoration(color: color.withOpacity(0.15), borderRadius: BorderRadius.zero),
       child: Text(status.replaceAll('_', ' '),
           style: Theme.of(context).textTheme.bodySmall?.copyWith(color: color, fontWeight: FontWeight.w600)),
     );
@@ -130,11 +131,11 @@ class _OrderItemRow extends StatelessWidget {
       child: Row(children: [
         if (item.image.isNotEmpty)
           ClipRRect(
-            borderRadius: BorderRadius.circular(8),
+            borderRadius: BorderRadius.zero,
             child: CachedNetworkImage(imageUrl: item.image, width: 56, height: 56, fit: BoxFit.cover),
           )
         else
-          Container(width: 56, height: 56, decoration: BoxDecoration(color: AppColors.beige, borderRadius: BorderRadius.circular(8))),
+          Container(width: 56, height: 56, decoration: BoxDecoration(color: AppColors.beige, borderRadius: BorderRadius.zero)),
         const SizedBox(width: 12),
         Expanded(
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [

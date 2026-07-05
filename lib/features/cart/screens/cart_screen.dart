@@ -19,7 +19,15 @@ class CartScreen extends ConsumerWidget {
       appBar: AppBar(title: const Text('My Cart')),
       body: cartAsync.when(
         loading: () => const Center(child: CircularProgressIndicator(color: AppColors.gold)),
-        error: (e, _) => Center(child: Text('Error: $e')),
+        error: (e, _) => Center(
+          child: Column(mainAxisSize: MainAxisSize.min, children: [
+            const Icon(Icons.error_outline, size: 48, color: AppColors.muted),
+            const SizedBox(height: 12),
+            Text('Could not load cart', style: Theme.of(context).textTheme.titleMedium),
+            const SizedBox(height: 8),
+            TextButton(onPressed: () => ref.refresh(cartProvider), child: const Text('Retry')),
+          ]),
+        ),
         data: (items) {
           if (items.isEmpty) {
             return Center(
@@ -59,10 +67,10 @@ class _CartItemTile extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     return Container(
       padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(color: AppColors.beige, borderRadius: BorderRadius.circular(12)),
+      decoration: BoxDecoration(color: AppColors.beige, borderRadius: BorderRadius.zero),
       child: Row(children: [
         ClipRRect(
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.zero,
           child: CachedNetworkImage(
             imageUrl: item.imageUrl,
             width: 80,
@@ -139,7 +147,7 @@ class _QtyButton extends StatelessWidget {
         height: 28,
         decoration: BoxDecoration(
           color: AppColors.ivory,
-          borderRadius: BorderRadius.circular(6),
+          borderRadius: BorderRadius.zero,
           border: Border.all(color: AppColors.beige),
         ),
         child: Icon(icon, size: 16, color: AppColors.ink),
@@ -162,7 +170,7 @@ class _CartSummary extends StatelessWidget {
       padding: const EdgeInsets.all(20),
       decoration: const BoxDecoration(
         color: AppColors.beige,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        borderRadius: BorderRadius.zero,
       ),
       child: Column(mainAxisSize: MainAxisSize.min, children: [
         _summaryRow(context, 'Subtotal', '₹${total.toStringAsFixed(0)}'),

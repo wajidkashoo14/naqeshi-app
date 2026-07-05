@@ -21,6 +21,7 @@ class ProductDetailScreen extends ConsumerStatefulWidget {
 class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
   int _imageIndex = 0;
   ProductVariant? _selectedVariant;
+  int _qty = 1;
 
   @override
   Widget build(BuildContext context) {
@@ -205,23 +206,76 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
       ),
       bottomNavigationBar: product.stock > 0
           ? SafeArea(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(20, 12, 20, 12),
-                child: ElevatedButton.icon(
-                  onPressed: () async {
-                    await ref.read(cartProvider.notifier).addItem(
-                          productId: product.id,
-                          variantId: _selectedVariant?.id,
-                        );
-                    if (context.mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Added to cart')),
-                      );
-                    }
-                  },
-                  icon: const Icon(Icons.shopping_bag_outlined),
-                  label: const Text('Add to Cart'),
+              child: Container(
+                padding: const EdgeInsets.fromLTRB(20, 12, 20, 16),
+                decoration: BoxDecoration(
+                  color: AppColors.ivory,
+                  border: Border(top: BorderSide(color: AppColors.ink.withOpacity(0.14))),
                 ),
+                child: Column(mainAxisSize: MainAxisSize.min, children: [
+                  // Row 1: qty stepper + wishlist
+                  Row(children: [
+                    // Qty stepper
+                    Expanded(
+                      child: Container(
+                        height: 44,
+                        decoration: BoxDecoration(
+                          border: Border.all(color: AppColors.ink),
+                        ),
+                        child: Row(children: [
+                          _QtyBtn(
+                            icon: Icons.remove,
+                            onTap: () { if (_qty > 1) setState(() => _qty--); },
+                          ),
+                          Expanded(
+                            child: Center(
+                              child: Text(
+                                '$_qty',
+                                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                                  fontWeight: FontWeight.w700,
+                                  color: AppColors.ink,
+                                ),
+                              ),
+                            ),
+                          ),
+                          _QtyBtn(
+                            icon: Icons.add,
+                            onTap: () {
+                              if (_qty < product.stock) setState(() => _qty++);
+                            },
+                          ),
+                        ]),
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    // Wishlist button
+                    _WishlistBtn(productId: product.id),
+                  ]),
+                  const SizedBox(height: 10),
+                  // Row 2: full-width Add to Cart
+                  SizedBox(
+                    width: double.infinity,
+                    height: 52,
+                    child: ElevatedButton.icon(
+                      onPressed: () async {
+                        await ref.read(cartProvider.notifier).addItem(
+                              productId: product.id,
+                              variantId: _selectedVariant?.id,
+                              quantity: _qty,
+                            );
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(_qty > 1 ? 'Added $_qty items to cart' : 'Added to cart'),
+                            ),
+                          );
+                        }
+                      },
+                      icon: const Icon(Icons.shopping_bag_outlined),
+                      label: const Text('Add to Cart'),
+                    ),
+                  ),
+                ]),
               ),
             )
           : null,
@@ -276,6 +330,49 @@ class _ReviewTile extends StatelessWidget {
         ],
         const Divider(height: 24),
       ],
+    );
+  }
+}
+
+class _QtyBtn extends StatelessWidget {
+  final IconData icon;
+  final VoidCallback onTap;
+  const _QtyBtn({required this.icon, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: SizedBox(
+        width: 44,
+        height: 44,
+        child: Icon(icon, size: 18, color: AppColors.ink),
+      ),
+    );
+  }
+}
+
+class _WishlistBtn extends ConsumerWidget {
+  final String productId;
+  const _WishlistBtn({required this.productId});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final isWishlisted = ref.watch(isWishlistedProvider(productId));
+    return GestureDetector(
+      onTap: () => ref.read(wishlistProvider.notifier).toggle(productId),
+      child: Container(
+        width: 52,
+        height: 44,
+        decoration: BoxDecoration(
+          border: Border.all(color: AppColors.ink.withOpacity(0.14)),
+        ),
+        child: Icon(
+          isWishlisted ? Icons.favorite : Icons.favorite_border,
+          color: isWishlisted ? AppColors.gold : AppColors.ink,
+          size: 20,
+        ),
+      ),
     );
   }
 }

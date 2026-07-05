@@ -58,7 +58,7 @@ class _HeroBanner extends StatelessWidget {
       margin: const EdgeInsets.fromLTRB(16, 0, 16, 0),
       decoration: BoxDecoration(
         color: AppColors.beige,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(2),
         gradient: const LinearGradient(
           colors: [AppColors.beige, Color(0xFFE8D8C0)],
           begin: Alignment.topLeft,
@@ -80,7 +80,7 @@ class _HeroBanner extends StatelessWidget {
             onTap: () => context.push('/products'),
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              decoration: BoxDecoration(color: AppColors.gold, borderRadius: BorderRadius.circular(20)),
+              decoration: BoxDecoration(color: AppColors.gold, borderRadius: BorderRadius.zero),
               child: Text('Shop Now', style: Theme.of(context).textTheme.labelLarge?.copyWith(color: AppColors.white)),
             ),
           ),
@@ -117,7 +117,7 @@ class _CategoryRow extends ConsumerWidget {
               Container(
                 width: 52,
                 height: 52,
-                decoration: BoxDecoration(color: AppColors.beige, borderRadius: BorderRadius.circular(14)),
+                decoration: BoxDecoration(color: AppColors.beige, borderRadius: BorderRadius.circular(2)),
                 child: Icon(cat.icon, color: AppColors.copper),
               ),
               const SizedBox(height: 6),

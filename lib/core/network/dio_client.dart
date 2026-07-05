@@ -5,6 +5,12 @@ import '../constants/app_constants.dart';
 
 final dioClientProvider = Provider<DioClient>((ref) => DioClient());
 
+// Callback set by AuthNotifier so DioClient can trigger logout without circular dependency
+typedef LogoutCallback = Future<void> Function();
+LogoutCallback? _onUnauthorized;
+
+void registerUnauthorizedCallback(LogoutCallback cb) => _onUnauthorized = cb;
+
 class DioClient {
   late final Dio _dio;
   final _storage = const FlutterSecureStorage();
@@ -25,7 +31,13 @@ class DioClient {
         }
         handler.next(options);
       },
-      onError: (error, handler) {
+      onError: (error, handler) async {
+        if (error.response?.statusCode == 401) {
+          // Token expired or invalid — clear session and trigger logout
+          await _storage.delete(key: AppConstants.tokenKey);
+          await _storage.delete(key: AppConstants.userKey);
+          await _onUnauthorized?.call();
+        }
         handler.next(error);
       },
     ));

@@ -43,39 +43,73 @@ class AppTheme {
             backgroundColor: AppColors.gold,
             foregroundColor: AppColors.white,
             minimumSize: const Size.fromHeight(52),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-            textStyle: GoogleFonts.dmSans(fontSize: 16, fontWeight: FontWeight.w600),
+            shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
+            textStyle: GoogleFonts.dmSans(fontSize: 15, fontWeight: FontWeight.w700, letterSpacing: 0.4),
+            elevation: 0,
           ),
         ),
         outlinedButtonTheme: OutlinedButtonThemeData(
           style: OutlinedButton.styleFrom(
-            foregroundColor: AppColors.gold,
+            foregroundColor: AppColors.ink,
             minimumSize: const Size.fromHeight(52),
-            side: const BorderSide(color: AppColors.gold),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-            textStyle: GoogleFonts.dmSans(fontSize: 16, fontWeight: FontWeight.w600),
+            side: const BorderSide(color: AppColors.ink, width: 1),
+            shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
+            textStyle: GoogleFonts.dmSans(fontSize: 15, fontWeight: FontWeight.w700, letterSpacing: 0.4),
+          ),
+        ),
+        textButtonTheme: TextButtonThemeData(
+          style: TextButton.styleFrom(
+            foregroundColor: AppColors.gold,
+            textStyle: GoogleFonts.dmSans(fontSize: 14, fontWeight: FontWeight.w600),
+            shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
           ),
         ),
         inputDecorationTheme: InputDecorationTheme(
           filled: true,
           fillColor: AppColors.beige,
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(8),
+          border: const OutlineInputBorder(
+            borderRadius: BorderRadius.zero,
             borderSide: BorderSide.none,
           ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(8),
-            borderSide: const BorderSide(color: AppColors.gold),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.zero,
+            borderSide: BorderSide(color: AppColors.ink.withOpacity(0.14)),
+          ),
+          focusedBorder: const OutlineInputBorder(
+            borderRadius: BorderRadius.zero,
+            borderSide: BorderSide(color: AppColors.gold, width: 1.5),
+          ),
+          errorBorder: const OutlineInputBorder(
+            borderRadius: BorderRadius.zero,
+            borderSide: BorderSide(color: AppColors.error),
+          ),
+          focusedErrorBorder: const OutlineInputBorder(
+            borderRadius: BorderRadius.zero,
+            borderSide: BorderSide(color: AppColors.error, width: 1.5),
           ),
           labelStyle: GoogleFonts.dmSans(color: AppColors.muted),
           hintStyle: GoogleFonts.dmSans(color: AppColors.muted),
+          contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
         ),
-        cardTheme: CardTheme(
+        cardTheme: const CardTheme(
           color: AppColors.beige,
           elevation: 0,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.zero),
         ),
         dividerTheme: const DividerThemeData(color: AppColors.beige, thickness: 1),
+        snackBarTheme: SnackBarThemeData(
+          behavior: SnackBarBehavior.floating,
+          backgroundColor: AppColors.ink,
+          contentTextStyle: GoogleFonts.dmSans(color: AppColors.white, fontSize: 14),
+          shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
+        ),
+        chipTheme: ChipThemeData(
+          shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
+          backgroundColor: AppColors.beige,
+          selectedColor: AppColors.gold,
+          labelStyle: GoogleFonts.dmSans(fontSize: 13),
+          side: BorderSide(color: AppColors.ink.withOpacity(0.2)),
+        ),
         bottomNavigationBarTheme: const BottomNavigationBarThemeData(
           backgroundColor: AppColors.ivory,
           selectedItemColor: AppColors.gold,

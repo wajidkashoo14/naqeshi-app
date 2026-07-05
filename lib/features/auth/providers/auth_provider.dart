@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/user_model.dart';
 import '../services/auth_service.dart';
+import '../../../core/network/dio_client.dart';
 
 final authStateProvider = AsyncNotifierProvider<AuthNotifier, UserModel?>(() => AuthNotifier());
 
@@ -10,6 +11,10 @@ class AuthNotifier extends AsyncNotifier<UserModel?> {
   @override
   Future<UserModel?> build() async {
     _service = ref.read(authServiceProvider);
+    // Register callback so DioClient can trigger logout on 401
+    registerUnauthorizedCallback(() async {
+      state = const AsyncData(null);
+    });
     return _service.getStoredUser();
   }
 

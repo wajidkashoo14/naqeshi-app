@@ -17,7 +17,15 @@ class OrdersScreen extends ConsumerWidget {
       appBar: AppBar(title: const Text('My Orders')),
       body: ordersAsync.when(
         loading: () => const Center(child: CircularProgressIndicator(color: AppColors.gold)),
-        error: (e, _) => Center(child: Text('Error: $e')),
+        error: (e, _) => Center(
+          child: Column(mainAxisSize: MainAxisSize.min, children: [
+            const Icon(Icons.error_outline, size: 48, color: AppColors.muted),
+            const SizedBox(height: 12),
+            Text('Could not load orders', style: Theme.of(context).textTheme.titleMedium),
+            const SizedBox(height: 8),
+            TextButton(onPressed: () => ref.refresh(ordersProvider), child: const Text('Retry')),
+          ]),
+        ),
         data: (orders) {
           if (orders.isEmpty) {
             return Center(
@@ -30,11 +38,15 @@ class OrdersScreen extends ConsumerWidget {
               ]),
             );
           }
-          return ListView.separated(
-            padding: const EdgeInsets.all(16),
-            itemCount: orders.length,
-            separatorBuilder: (_, __) => const SizedBox(height: 12),
-            itemBuilder: (_, i) => _OrderTile(order: orders[i]),
+          return RefreshIndicator(
+            color: AppColors.gold,
+            onRefresh: () async => ref.refresh(ordersProvider),
+            child: ListView.separated(
+              padding: const EdgeInsets.all(16),
+              itemCount: orders.length,
+              separatorBuilder: (_, __) => const SizedBox(height: 12),
+              itemBuilder: (_, i) => _OrderTile(order: orders[i]),
+            ),
           );
         },
       ),
@@ -62,7 +74,7 @@ class _OrderTile extends StatelessWidget {
       onTap: () => context.push('/orders/${order.id}'),
       child: Container(
         padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(color: AppColors.beige, borderRadius: BorderRadius.circular(12)),
+        decoration: BoxDecoration(color: AppColors.beige, borderRadius: BorderRadius.zero),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
             Text(order.orderNumber, style: Theme.of(context).textTheme.titleMedium),
@@ -70,7 +82,7 @@ class _OrderTile extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
               decoration: BoxDecoration(
                 color: _statusColor(order.status).withOpacity(0.15),
-                borderRadius: BorderRadius.circular(20),
+                borderRadius: BorderRadius.zero,
               ),
               child: Text(
                 order.status.replaceAll('_', ' '),
